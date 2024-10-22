@@ -9,14 +9,16 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
   // TODO: verify the token exists and add the user data to the request object
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
+
   if (!token) {
     return res.status(401).send('Unauthorized');
   }
-  jwt.verify(token, process.env.JWT_SECRET_KEY as string, (err, decoded) => {
-    if (err) {
-      return res.status(403).send('Forbidden');
-    }
-    req.user = decoded as JwtPayload;
-    next();
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY as string) as JwtPayload;
+    req.user = decoded;
+    return next();
+  } catch (err) {
+    return res.status(403).send('Forbidden');
   }
-)};
+};
